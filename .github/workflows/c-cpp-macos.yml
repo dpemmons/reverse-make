@@ -1,4 +1,4 @@
-name: C/C++ Build (Linux)
+name: C/C++ Build (MacOS)
 
 on:
   push:
