@@ -1,5 +1,7 @@
 # reverse-make
 
+[![C/C++ CI](https://github.com/dpemmons/reverse-make/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/dpemmons/reverse-make/actions/workflows/c-cpp.yml)
+
 `reverse-make` is a utility that takes a log of `gcc`, `g++`, and `ar` build commands as input and reconstructs the dependencies of built libraries. This utility could be useful for developers migrating to a new build system, analyzing the dependencies in their current build, or automating parts of their build migration process.
 
 This utility is not broadly tested. See [Limitations](#limitations).
