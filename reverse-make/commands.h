@@ -1,6 +1,7 @@
 #ifndef REVERSE_MAKE_COMMANDS_H__
 #define REVERSE_MAKE_COMMANDS_H__
 
+#include <filesystem>
 #include <set>
 #include <string>
 #include <vector>
@@ -29,11 +30,15 @@ struct GccCommand {
   // Link options
   set<string> linkopts;
   set<string> link_search_dirs;  // -Ldir
+  set<string> link_libs;         // -Ldir
 
-  set<string> inputs;
-  string output;
+  vector<filesystem::path> inputs;
+  filesystem::path output;
 };
 
-struct ArCommand {};
+struct ArCommand {
+  vector<filesystem::path> inputs;
+  filesystem::path output;
+};
 
 #endif  // REVERSE_MAKE_COMMANDS_H__
