@@ -1,65 +1,58 @@
 # reverse-make
 
-`reverse-make` is a C++ utility that analyzes `gcc`, `g++`, and `ar` compilation and linking commands. Its purpose is to take a log of build commands and reconstruct the dependencies of built libraries. This is useful when transitioning to declarative build systems such as Bazel or Gyp.
+`reverse-make` is a utility that takes a log of `gcc`, `g++`, and `ar` build commands as input and reconstructs the dependencies of built libraries. This utility could be useful for developers migrating to a new build system, analyzing the dependencies in their current build, or automating parts of their build migration process.
 
 This utility is not broadly tested. See [Limitations](#limitations).
 
-## Program Features
+## Building and Running
 
-* Parses and processes gcc, g++, and ar commands from an input file.
-* Groups dependencies based on their compile flags.
-* Lists the groups of dependencies and their corresponding flags.
-* Facilitates the construction of build configurations in other build systems.
+1. Clone the repository:
 
-## Usage
+   ```bash
+   git clone https://github.com/dpemmons/reverse-make.git
+   ```
 
-This program expects the commands to be present in a file. The file path should be passed as a command line argument.
+2. Navigate to the project directory:
 
-### Compilation
+   ```bash
+   cd reverse-make
+   ```
 
-The program is compiled using the provided Makefile. You can compile it on a Linux system by running:
+3. Build the project:
 
-```bash
-make
-```
+   ```bash
+   make
+   ```
 
-This will generate a debug build of the `reverse-make` executable, which you can find under `./build/debug/reverse-make`.
+   By default, this generates a debug build which ends up in `./build/debug/reverse-make`. To do an optimized build, run:
 
-If you want to generate an optimized release build, you can do so by specifying the `BUILD` variable:
+   ```bash
+   make BUILD=release
+   ```
 
-```bash
-make BUILD=release
-```
+   This results in `build/release/reverse-make`.
 
-This will place the `reverse-make` executable in the `build/release` directory.
+4. Run the utility with your build log as input:
 
-### Running
+   ```bash
+   ./build/debug/reverse-make <your-build-log.txt>
+   ```
 
-After successful compilation, the program can be run using the following command:
+   or
 
-```bash
-./build/debug/reverse-make input_commands.txt
-```
+   ```bash
+   ./build/release/reverse-make <your-build-log.txt>
+   ```
 
-or for the release build:
+   Replace `<your-build-log.txt>` with the path to your build log.
 
-```bash
-./build/release/reverse-make input_commands.txt
-```
-
-Here, `input_commands.txt` is the input file containing the gcc, g++, and ar commands.
-
-Sample input files can be found in the `examples/` directory.
-
-Please ensure to clean up your compile log to meet the acceptable format before running the program.
+Note: Your build log might need some cleanup before running.
 
 ## Examples
 
-```bash
-./build/debug/reverse-make examples/libuv.input.log > examples/libuv.output.txt
-```
-
-See [examples/libuv.input.log](./examples/libuv.input.log) and [examples/libuv.output.txt](./examples/libuv.output.txt)
+| Input | Output |
+|-------|--------|
+| [libuv.input.log](./examples/libuv.input.log) | [libuv.output.txt](./examples/libuv.output.txt) |
 
 ## Limitations
 
@@ -82,3 +75,7 @@ It's pretty hacky. The code consists of several key components:
 ## Contributions
 
 Contributions are welcome! Please submit a Pull Request or open an Issue if you find a bug or want to suggest a feature enhancement. To aid in understanding and reproducing any issues, please include example input with any bug report or pull request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
