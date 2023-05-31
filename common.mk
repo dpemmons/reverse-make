@@ -1,6 +1,21 @@
 BUILD := debug
 COMPILER=gcc
 
+CXX.gcc := g++
+CC.gcc := gcc
+LD.gcc := g++
+AR.gcc := ar
+
+CXX.clang := clang++
+CC.clang := clang
+LD.clang := clang++
+AR.clang := ar
+
+CXX := ${CXX.${COMPILER}}
+CC := ${CC.${COMPILER}}
+LD := ${LD.${COMPILER}}
+AR := ${AR.${COMPILER}}
+
 CXXFLAGS.gcc.debug := -DDEBUG -g3 -ggdb -Og -fstack-protector-all
 CXXFLAGS.gcc.release := -O3 -march=native -DNDEBUG
 CXXFLAGS.gcc := -pthread -std=gnu++17 -march=native -g -MMD -MP \

@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -286,7 +287,9 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
         abort();
       }
       // pass the whole thing.
-      gcc_command->linkopts.insert(fmt::format("{} {}", parts[i], parts[++i]));
+      auto this_part = parts[i];
+      auto next_part = parts[++i];
+      gcc_command->linkopts.insert(fmt::format("{} {}", this_part, next_part));
     } else if (startsWith(parts[i], "-f") || parts[i] == "-p" ||
                parts[i] == "-pg" || parts[i] == "--coverage" ||
                parts[i] == "-undef") {
@@ -322,14 +325,18 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
         abort();
       }
       // pass the whole thing.
-      gcc_command->linkopts.insert(fmt::format("{} {}", parts[i], parts[++i]));
+      auto this_part = parts[i];
+      auto next_part = parts[++i];
+      gcc_command->linkopts.insert(fmt::format("{} {}", this_part, next_part));
     } else if (parts[i] == "-l") {
       if (i + 1 == parts.size()) {
         fmt::print("No argument after '-l'\n");
         abort();
       }
       // pass the whole thing.
-      gcc_command->link_libs.insert(fmt::format("{} {}", parts[i], parts[++i]));
+      auto this_part = parts[i];
+      auto next_part = parts[++i];
+      gcc_command->linkopts.insert(fmt::format("{} {}", this_part, next_part));
     } else if (startsWith(parts[i], "-l")) {
       // Note that we're losing positional information. According to the gcc man
       // file:
@@ -394,7 +401,7 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
       gcc_command->inputs.push_back(parts[i]);
     }
   }
-  return move(gcc_command);
+  return std::move(gcc_command);
 }
 
 /**
@@ -429,7 +436,7 @@ shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
     ar_command->inputs.push_back(parts[i]);
   }
 
-  return move(ar_command);
+  return std::move(ar_command);
 }
 
 /**
