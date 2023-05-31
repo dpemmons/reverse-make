@@ -33,8 +33,8 @@ CFLAGS := ${CFLAGS.${COMPILER}}
 
 LDFLAGS.debug := -ggdb3
 LDFLAGS.release :=
-LDFLAGS := -fuse-ld=gold -pthread -g ${LDFLAGS.${BUILD}}
-LDLIBS := -ldl
+LDFLAGS := -g ${LDFLAGS.${BUILD}}
+LDLIBS :=
 
 CLI_LIB_HEADERS := ${CURDIR}/external/CLI-2.3.2
 FMT_LIB_HEADERS := ${CURDIR}/external/fmtlib-9.1.0
