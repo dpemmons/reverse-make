@@ -57,6 +57,34 @@ struct fmt::formatter<vector<filesystem::path>> {
   }
 };
 
+/**
+ * Splits the given string into substrings at newline characters ('\n') that are
+ * not escaped by backslashes.
+ *
+ * This function iterates over each character in the input string, checking if
+ * it's a newline character. If it is, and if it is not preceded by a backslash,
+ * it's considered as a split point. A sequence of two backslashes before a
+ * newline does not count as an escape sequence (i.e., the newline will still be
+ * considered as a split point).
+ *
+ * @param str The string to be split. This string can contain newline characters
+ * and backslashes.
+ *
+ * @return A std::vector of std::string, each containing a substring of 'str'.
+ * These substrings are formed by splitting 'str' at each unescaped newline
+ * character. If 'str' does not contain any unescaped newline characters, the
+ * returned vector will contain one element that is equal to 'str'.
+ *
+ * @note The escape character (backslash) itself is also escaped. That is, a
+ * backslash followed by a non-newline character will result in two backslashes
+ * in the resulting string. Also, if 'str' ends with a backslash, that backslash
+ * will be duplicated in the last string of the returned vector.
+ *
+ * Example:
+ * split_unescaped_newlines("hello\\nworld\\n") returns {"hello\\nworld\\n"}
+ * split_unescaped_newlines("hello\nworld\n") returns {"hello", "world", ""}
+ * split_unescaped_newlines("hello\\world") returns {"hello\\world"}
+ */
 vector<string> split_unescaped_newlines(const string& str) {
   vector<string> result;
   string temp;
@@ -86,6 +114,38 @@ vector<string> split_unescaped_newlines(const string& str) {
   return result;
 }
 
+/**
+ * Splits a given string into multiple parts based on spaces, respecting quoted
+ * substrings and escape sequences.
+ *
+ * This function parses an input string that may contain quoted and/or escaped
+ * characters. It divides the string into parts along space characters (' '),
+ * except when the space character is within a quoted substring or is escaped by
+ * a backslash. A sequence of two backslashes before a space does not count as
+ * an escape sequence (i.e., the space will still be considered as a split
+ * point). At the end, outer quotes from each part of the string are removed if
+ * present.
+ *
+ * @param str The string to be split. This string can contain space characters,
+ * quotation marks and backslashes.
+ *
+ * @return A std::vector of std::string, each containing a part of 'str'. These
+ * parts are formed by splitting 'str' at each space character that is not
+ * within quotes and not escaped. If 'str' does not contain any such space
+ * characters, the returned vector will contain one element that is equal to
+ * 'str' (minus the outer quotes, if they are present).
+ *
+ * @note The escape character (backslash) itself is also escaped. That is, a
+ * backslash followed by a non-space, non-quote character will result in two
+ * backslashes in the resulting string. Also, if 'str' ends with a backslash,
+ * that backslash will be duplicated in the last string of the returned vector.
+ *
+ * Example:
+ * split_string_into_parts("hello world") returns {"hello", "world"}
+ * split_string_into_parts("\"hello world\"") returns {"hello world"}
+ * split_string_into_parts("hello\\ world") returns {"hello\\ world"}
+ * split_string_into_parts("\"hello\\\" world\"") returns {"hello\" world"}
+ */
 vector<string> split_string_into_parts(const string& str) {
   vector<string> result;
   string arg;
@@ -132,21 +192,58 @@ vector<string> split_string_into_parts(const string& str) {
   return result;
 }
 
+/**
+ * Checks if a given string starts with a specific prefix.
+ *
+ * This function compares the start of the input string 'str' with the provided
+ * prefix string. It returns true if the first characters of 'str' are equal to
+ * 'prefix', and false otherwise.
+ *
+ * @param str The string to be checked. This is the string that may or may not
+ * start with 'prefix'.
+ *
+ * @param prefix The prefix string. This function checks if 'str' starts with
+ * this string.
+ *
+ * @return A bool value indicating whether 'str' starts with 'prefix'. If
+ * 'prefix' is an empty string, the function returns true.
+ *
+ * Example:
+ * startsWith("hello world", "hello") returns true
+ * startsWith("hello world", "world") returns false
+ */
 bool startsWith(const string& str, const string& prefix) {
   return str.size() >= prefix.size() &&
          str.compare(0, prefix.size(), prefix) == 0;
 }
 
-/*
-  https://man7.org/linux/man-pages/man1/gcc.1.html
-       gcc [-c|-S|-E] [-std=standard]
-           [-g] [-pg] [-Olevel]
-           [-Wwarn...] [-Wpedantic]
-           [-Idir...] [-Ldir...]
-           [-Dmacro[=defn]...] [-Umacro]
-           [-foption...] [-mmachine-option...]
-           [-o outfile] [@file] infile...
-*/
+/**
+ * Processes a vector of strings containing parts of a GCC or G++ command, and
+ * constructs a GccCommand object from them.
+ *
+ * This function identifies and handles several types of command line options,
+ * including (but not limited to):
+ * - "-c", "-S", and "-E" to determine the command type;
+ * - "-D", "-I", and "-f" to handle definitions, include directories, and some
+ * options;
+ * - "-W", "-m", "-O", and "-g" to handle warnings, target options,
+ * optimizations, and debug options;
+ * - "-L", "-l", and "-o" to handle linker options.
+ *
+ * Unhandled or unrecognised options cause the function to abort and print an
+ * error message.
+ *
+ * @param parts A vector of strings containing parts of a GCC or G++ command.
+ * This is usually obtained by splitting the command line at each space
+ * character.
+ *
+ * @return A shared_ptr to a GccCommand object that represents the given
+ * command.
+ *
+ * @note This function assumes that 'parts' is non-empty and that the first
+ * element of 'parts' is "gcc" or "g++". It does not check for this, and the
+ * behaviour is undefined if this is not the case.
+ */
 shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
   auto gcc_command = make_shared<GccCommand>();
 
@@ -300,6 +397,25 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
   return move(gcc_command);
 }
 
+/**
+ * Processes a vector of strings containing parts of an 'ar' command, and
+ * constructs an ArCommand object from them.
+ *
+ * This function only supports the form 'ar cr <inputs...> <output>', where
+ * '<inputs...>' is one or more input files, and '<output>' is the output file.
+ * Other forms of 'ar' commands are not supported and will cause the function to
+ * abort and print an error message.
+ *
+ * @param parts A vector of strings containing parts of an 'ar' command. This is
+ * usually obtained by splitting the command line at each space character.
+ *
+ * @return A shared_ptr to an ArCommand object that represents the given
+ * command.
+ *
+ * @note This function assumes that 'parts' is of the form 'ar cr <inputs...>
+ * <output>'. It does not check for this, and the behaviour is undefined if this
+ * is not the case.
+ */
 shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   auto ar_command = make_shared<ArCommand>();
 
@@ -314,6 +430,128 @@ shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   }
 
   return move(ar_command);
+}
+
+/**
+ * Iterates through unused inputs from a compilation/linking command, groups
+ * them based on the command's flags and prints the groups.
+ *
+ * The function works in the following steps:
+ * 1. For each unused input, it finds its corresponding GCC command and marks
+ * the input as used.
+ * 2. It then iterates through the other unused inputs to find ones that match
+ * the original input's flags.
+ * 3. For each match found, it adds the match to a group and marks it as used.
+ * 4. After iterating through all unused inputs, it prints each group along with
+ * the representative command flags.
+ *
+ * @param unused_dependencies A map where the key is a string representation of
+ * an input file, and the value is a bool indicating whether the input has been
+ * used. This map is modified in-place: all inputs that are found in
+ * 'gcc_compile_commands' will be marked as used.
+ *
+ * @param gcc_compile_commands A map where the key is a string representation of
+ * an output file, and the value is a shared_ptr to a GccCommand object. This
+ * map should contain a command for every input file in 'unused_dependencies'.
+ *
+ * @note The function assumes that 'unused_dependencies' and
+ * 'gcc_compile_commands' have been filled correctly and that
+ * 'unused_dependencies' contains all input files that have not been processed
+ * yet. The behavior is undefined if this is not the case.
+ */
+void find_deps(
+    map<string, bool>& unused_dependencies,
+    const map<string, shared_ptr<GccCommand>>& gcc_compile_commands) {
+  // For each dependency...
+  struct Group {
+    vector<string> sources;
+    shared_ptr<GccCommand> example_gcc_command;
+  };
+  vector<Group> match_groups;
+  for (auto& unused_dependency : unused_dependencies) {
+    if (unused_dependency.second) {
+      continue;
+    }
+    auto input = gcc_compile_commands.at(unused_dependency.first);
+
+    // mark it used.
+    unused_dependency.second = true;
+
+    // find other dependencies that have the same flags as this one.
+    // save off the *input*
+    Group group;
+    group.sources.push_back(input->inputs[0]);
+    group.example_gcc_command = input;
+
+    // Now find others that match it.
+    for (auto& maybe_matched_unused_dependency : unused_dependencies) {
+      // skip used potential matches.
+      if (maybe_matched_unused_dependency.second) {
+        continue;
+      }
+
+      if (auto maybe_matched_input =
+              gcc_compile_commands.find(maybe_matched_unused_dependency.first);
+          maybe_matched_input != gcc_compile_commands.end()) {
+        if (input->FlagsMatch(*maybe_matched_input->second)) {
+          // Match!
+          if (maybe_matched_input->second->inputs.size() != 1) {
+            fmt::print(
+                "Expected matching compile target {} to have one input!\n",
+                maybe_matched_input->first);
+            abort();
+          }
+
+          // fmt::print("Found a matching map: {} has the same flags as {}
+          // ({})\n",
+          //            unused_dependency.first,
+          //            maybe_matched_input->second->output,
+          //            maybe_matched_input->second->inputs[0]);
+
+          group.sources.push_back(maybe_matched_input->second->inputs[0]);
+          // mark it used
+          maybe_matched_unused_dependency.second = true;
+        }
+      } else {
+        fmt::print("Compilation command for dependency \"{}\" not found.\n",
+                   input->output);
+        abort();
+      }
+    }
+
+    match_groups.push_back(group);
+  }
+
+  fmt::print("  Found the following group(s) of matching inputs:\n");
+  int group_num = 0;
+  for (auto group : match_groups) {
+    if (group.sources.size() == 0) {
+      fmt::print("  Group sources is empty!\n");
+      continue;
+    }
+
+    fmt::print("    Group {} depending on {} inputs: {}\n", group_num,
+               group.sources.size(), group.sources);
+    fmt::print("    Compiled with the following flags:\n");
+    auto representative_input = group.example_gcc_command;
+    fmt::print("      compiler: {}\n",
+               representative_input->CompilerAsString());
+    fmt::print("      command: {}\n", representative_input->CommandAsString());
+    fmt::print("      defines: {}\n", representative_input->defines);
+    fmt::print("      includes: {}\n", representative_input->includes);
+    fmt::print("      cflags: {}\n", representative_input->cflags);
+    fmt::print("      warns: {}\n", representative_input->warns);
+    fmt::print("      target_opts: {}\n", representative_input->target_opts);
+    fmt::print("      optimizations: {}\n",
+               representative_input->optimizations);
+    fmt::print("      debug: {}\n", representative_input->debug);
+    fmt::print("      linkopts: {}\n", representative_input->linkopts);
+    fmt::print("      link_search_dirs: {}\n",
+               representative_input->link_search_dirs);
+    fmt::print("      link_libs: {}\n", representative_input->link_libs);
+
+    group_num++;
+  }
 }
 
 int main(int argc, const char** argv) {
@@ -335,8 +573,8 @@ int main(int argc, const char** argv) {
   string file = buffer.str();
 
   auto commands = split_unescaped_newlines(file);
-  int line = 0;
-  vector<shared_ptr<GccCommand>> gcc_compile_commands;
+  int line = 1;
+  map<string, shared_ptr<GccCommand>> gcc_compile_commands;
   vector<shared_ptr<GccCommand>> gcc_link_commands;
   vector<shared_ptr<ArCommand>> ar_commands;
   for (auto command : commands) {
@@ -345,7 +583,7 @@ int main(int argc, const char** argv) {
       if (parts[0] == "gcc" || parts[0] == "g++") {
         auto c = process_gcc_command(parts);
         if (c->command == GccCommand::COMPILE) {
-          gcc_compile_commands.push_back(c);
+          gcc_compile_commands.insert(pair(c->output, c));
         } else if (c->command == GccCommand::LINK) {
           gcc_link_commands.push_back(c);
         } else {
@@ -355,31 +593,51 @@ int main(int argc, const char** argv) {
       } else if (parts[0] == "ar") {
         ar_commands.push_back(process_ar_command(parts));
       } else {
-        fmt::print("Skipping unrecognized command {}\n", parts[0]);
+        fmt::print("Skipping unrecognized command \"{}\" on line {}.\n",
+                   parts[0], line);
       }
-    } else {
-      // skip.
-      fmt::print("Skipping empty line {}\n", line);
     }
     line++;
   }
 
-  for (auto gcc_command : gcc_compile_commands) {
-    fmt::print("gcc build: {} -> {}\n", gcc_command->inputs[0],
-               gcc_command->output);
-  }
-
-  for (auto gcc_command : gcc_link_commands) {
-    fmt::print("gcc link: [{}] -> {}\n", gcc_command->inputs,
-               gcc_command->output);
-  }
-
+  // For each ar link target...
   for (auto ar_command : ar_commands) {
-    fmt::print("ar archive: [{}] -> {}\n", ar_command->inputs,
-               ar_command->output);
+    fmt::print("----------------------------------------------------\n");
+    fmt::print("ar archive target: {} has {} dependencies.\n",
+               ar_command->output, ar_command->inputs.size());
+    fmt::print("----------------------------------------------------\n");
+
+    // Save away all dependencies as keys. We'll use keep track of which
+    // dependencies haven't yet been matched to others with the same flags.
+    map<string, bool> unused_dependencies;
+    for (auto input : ar_command->inputs) {
+      unused_dependencies.insert(pair(input, false));
+    }
+    // consumes unused_dependencies.
+    find_deps(unused_dependencies, gcc_compile_commands);
   }
 
-  // TODO: print a suggested dependency tree.
+  // For each gcc link target...
+  for (auto gcc_command : gcc_link_commands) {
+    fmt::print("----------------------------------------------------\n");
+    fmt::print("gcc link target: {} has {} dependencies.\n",
+               gcc_command->output, gcc_command->inputs.size());
+    fmt::print("----------------------------------------------------\n");
+
+    fmt::print("  Linked with the following flags:\n");
+    fmt::print("    linkopts: {}\n", gcc_command->linkopts);
+    fmt::print("    link_search_dirs: {}\n", gcc_command->link_search_dirs);
+    fmt::print("    link_libs: {}\n", gcc_command->link_libs);
+
+    // Save away all dependencies as keys. We'll use keep track of which
+    // dependencies haven't yet been matched to others with the same flags.
+    map<string, bool> unused_dependencies;
+    for (auto input : gcc_command->inputs) {
+      unused_dependencies.insert(pair(input, false));
+    }
+    // consumes unused_dependencies.
+    find_deps(unused_dependencies, gcc_compile_commands);
+  }
 
   input_stream.close();
 

@@ -9,7 +9,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceRoot}/build/debug/reverse-make",
-      "args": ["./examples/libuv.make.log"],
+      "args": ["./examples/libuv.input.log"],
       "stopAtEntry": true,
       "cwd": "${workspaceFolder}",
       "environment": [],
