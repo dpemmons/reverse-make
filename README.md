@@ -1,2 +1,3 @@
 # reverse-make
-Generate makefiles from build logs. 
+
+Partially generate makefiles from build logs.
