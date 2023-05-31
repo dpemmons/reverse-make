@@ -379,7 +379,8 @@ int main(int argc, const char** argv) {
                ar_command->output);
   }
 
-  // auto commands = process_file(input_stream);
+  // TODO: print a suggested dependency tree.
+
   input_stream.close();
 
   return 0;
