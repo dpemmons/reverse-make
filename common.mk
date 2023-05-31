@@ -7,7 +7,6 @@ CXXFLAGS.gcc := -pthread -std=gnu++17 -march=native -g -MMD -MP \
   -fmessage-length=0 \
   -fdiagnostics-show-template-tree \
   -fdiagnostics-color=auto \
-  -fdiagnostics-generate-patch \
   ${CXXFLAGS.gcc.${BUILD}}
 
 CXXFLAGS.clang.debug := -O0 -fstack-protector-all
