@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest, ubuntu-22.04, ubuntu-20.04, macos-latest]
 
     steps:
     - uses: actions/checkout@v3
