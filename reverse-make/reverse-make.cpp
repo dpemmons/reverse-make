@@ -426,9 +426,10 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
 shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   auto ar_command = make_shared<ArCommand>();
 
-  if (parts.size() < 4 || (parts[1] != "cr" && parts[1] != "rc")) {
+  if (parts.size() < 4 || (parts[1] != "cr" && parts[1] != "rc" &&
+                           parts[1] != "qc" && parts[1] != "cq")) {
     fmt::print(
-        "Only form of `ar` command suported is `ar cr|rc <inputs...> "
+        "Only form of `ar` command suported is `ar cr|rc|cq|qc <inputs...> "
         "<output>\n");
     abort();
   }
@@ -532,7 +533,8 @@ void find_deps(map<string, bool>& unused_dependencies,
     match_groups.push_back(group);
   }
 
-  fmt::print("  Found the following group(s) of matching source dependencies:\n");
+  fmt::print(
+      "  Found the following group(s) of matching source dependencies:\n");
   int group_num = 0;
   for (auto group : match_groups) {
     if (group.sources.size() == 0) {
@@ -540,8 +542,8 @@ void find_deps(map<string, bool>& unused_dependencies,
       continue;
     }
 
-    fmt::print("    Group {} depending on {} source dependencies: {}\n", group_num,
-               group.sources.size(), group.sources);
+    fmt::print("    Group {} depending on {} source dependencies: {}\n",
+               group_num, group.sources.size(), group.sources);
     fmt::print("    Compiled with the following flags:\n");
     auto representative_input = group.example_gcc_command;
     fmt::print("      compiler: {}\n",
