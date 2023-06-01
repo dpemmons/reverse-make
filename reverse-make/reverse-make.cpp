@@ -426,9 +426,10 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
 shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   auto ar_command = make_shared<ArCommand>();
 
-  if (parts.size() < 4 || parts[1] != "cr") {
+  if (parts.size() < 4 || (parts[1] != "cr" && parts[1] != "rc")) {
     fmt::print(
-        "Only form of `ar` command suported is `ar cr <inputs...> <output>\n");
+        "Only form of `ar` command suported is `ar cr|rc <inputs...> "
+        "<output>\n");
     abort();
   }
   ar_command->output = parts[2];
@@ -452,23 +453,15 @@ shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
  * 4. After iterating through all unused inputs, it prints each group along with
  * the representative command flags.
  *
- * @param unused_dependencies A map where the key is a string representation of
- * an input file, and the value is a bool indicating whether the input has been
- * used. This map is modified in-place: all inputs that are found in
- * 'gcc_compile_commands' will be marked as used.
- *
- * @param gcc_compile_commands A map where the key is a string representation of
- * an output file, and the value is a shared_ptr to a GccCommand object. This
- * map should contain a command for every input file in 'unused_dependencies'.
- *
  * @note The function assumes that 'unused_dependencies' and
  * 'gcc_compile_commands' have been filled correctly and that
  * 'unused_dependencies' contains all input files that have not been processed
  * yet. The behavior is undefined if this is not the case.
  */
-void find_deps(
-    map<string, bool>& unused_dependencies,
-    const map<string, shared_ptr<GccCommand>>& gcc_compile_commands) {
+void find_deps(map<string, bool>& unused_dependencies,
+               const map<string, shared_ptr<GccCommand>>& gcc_compile_commands,
+               const map<string, shared_ptr<GccCommand>>& gcc_link_commands,
+               const map<string, shared_ptr<ArCommand>>& ar_commands) {
   // For each dependency...
   struct Group {
     vector<string> sources;
@@ -479,7 +472,13 @@ void find_deps(
     if (unused_dependency.second) {
       continue;
     }
-    auto input = gcc_compile_commands.at(unused_dependency.first);
+
+    auto maybe_input = gcc_compile_commands.find(unused_dependency.first);
+    if (maybe_input == gcc_compile_commands.end()) {
+      // not a source input.
+      continue;
+    }
+    auto input = maybe_input->second;
 
     // mark it used.
     unused_dependency.second = true;
@@ -509,19 +508,23 @@ void find_deps(
             abort();
           }
 
-          // fmt::print("Found a matching map: {} has the same flags as {}
-          // ({})\n",
-          //            unused_dependency.first,
-          //            maybe_matched_input->second->output,
-          //            maybe_matched_input->second->inputs[0]);
-
           group.sources.push_back(maybe_matched_input->second->inputs[0]);
           // mark it used
           maybe_matched_unused_dependency.second = true;
         }
+      } else if (auto maybe_matched_input = gcc_link_commands.find(
+                     maybe_matched_unused_dependency.first);
+                 maybe_matched_input != gcc_link_commands.end()) {
+        // Link depdency. Mark it used and skip.
+        maybe_matched_unused_dependency.second = true;
+      } else if (auto maybe_matched_input =
+                     ar_commands.find(maybe_matched_unused_dependency.first);
+                 maybe_matched_input != ar_commands.end()) {
+        // Link depdency. Mark it used and skip.
+        maybe_matched_unused_dependency.second = true;
       } else {
         fmt::print("Compilation command for dependency \"{}\" not found.\n",
-                   input->output);
+                   maybe_matched_unused_dependency.first);
         abort();
       }
     }
@@ -529,7 +532,7 @@ void find_deps(
     match_groups.push_back(group);
   }
 
-  fmt::print("  Found the following group(s) of matching inputs:\n");
+  fmt::print("  Found the following group(s) of matching source dependencies:\n");
   int group_num = 0;
   for (auto group : match_groups) {
     if (group.sources.size() == 0) {
@@ -537,7 +540,7 @@ void find_deps(
       continue;
     }
 
-    fmt::print("    Group {} depending on {} inputs: {}\n", group_num,
+    fmt::print("    Group {} depending on {} source dependencies: {}\n", group_num,
                group.sources.size(), group.sources);
     fmt::print("    Compiled with the following flags:\n");
     auto representative_input = group.example_gcc_command;
@@ -582,8 +585,8 @@ int main(int argc, const char** argv) {
   auto commands = split_unescaped_newlines(file);
   int line = 1;
   map<string, shared_ptr<GccCommand>> gcc_compile_commands;
-  vector<shared_ptr<GccCommand>> gcc_link_commands;
-  vector<shared_ptr<ArCommand>> ar_commands;
+  map<string, shared_ptr<GccCommand>> gcc_link_commands;
+  map<string, shared_ptr<ArCommand>> ar_commands;
   for (auto command : commands) {
     auto parts = split_string_into_parts(command);
     if (parts.size() > 0) {
@@ -592,13 +595,14 @@ int main(int argc, const char** argv) {
         if (c->command == GccCommand::COMPILE) {
           gcc_compile_commands.insert(pair(c->output, c));
         } else if (c->command == GccCommand::LINK) {
-          gcc_link_commands.push_back(c);
+          gcc_link_commands.insert(pair(c->output, c));
         } else {
           fmt::print("Unsupported or unknown gcc/g++ command type.");
           abort();
         }
       } else if (parts[0] == "ar") {
-        ar_commands.push_back(process_ar_command(parts));
+        auto c = process_ar_command(parts);
+        ar_commands.insert(pair(c->output, c));
       } else {
         fmt::print("Skipping unrecognized command \"{}\" on line {}.\n",
                    parts[0], line);
@@ -610,40 +614,45 @@ int main(int argc, const char** argv) {
   // For each ar link target...
   for (auto ar_command : ar_commands) {
     fmt::print("----------------------------------------------------\n");
-    fmt::print("ar archive target: {} has {} dependencies.\n",
-               ar_command->output, ar_command->inputs.size());
+    fmt::print("ar archive target: {} has {} dependencies: {}.\n",
+               ar_command.second->output, ar_command.second->inputs.size(),
+               ar_command.second->inputs);
     fmt::print("----------------------------------------------------\n");
 
     // Save away all dependencies as keys. We'll use keep track of which
     // dependencies haven't yet been matched to others with the same flags.
     map<string, bool> unused_dependencies;
-    for (auto input : ar_command->inputs) {
+    for (auto input : ar_command.second->inputs) {
       unused_dependencies.insert(pair(input, false));
     }
     // consumes unused_dependencies.
-    find_deps(unused_dependencies, gcc_compile_commands);
+    find_deps(unused_dependencies, gcc_compile_commands, gcc_link_commands,
+              ar_commands);
   }
 
   // For each gcc link target...
   for (auto gcc_command : gcc_link_commands) {
     fmt::print("----------------------------------------------------\n");
-    fmt::print("gcc link target: {} has {} dependencies.\n",
-               gcc_command->output, gcc_command->inputs.size());
+    fmt::print("gcc link target: {} has {} dependencies: {}\n",
+               gcc_command.second->output, gcc_command.second->inputs.size(),
+               gcc_command.second->inputs);
     fmt::print("----------------------------------------------------\n");
 
     fmt::print("  Linked with the following flags:\n");
-    fmt::print("    linkopts: {}\n", gcc_command->linkopts);
-    fmt::print("    link_search_dirs: {}\n", gcc_command->link_search_dirs);
-    fmt::print("    link_libs: {}\n", gcc_command->link_libs);
+    fmt::print("    linkopts: {}\n", gcc_command.second->linkopts);
+    fmt::print("    link_search_dirs: {}\n",
+               gcc_command.second->link_search_dirs);
+    fmt::print("    link_libs: {}\n", gcc_command.second->link_libs);
 
     // Save away all dependencies as keys. We'll use keep track of which
     // dependencies haven't yet been matched to others with the same flags.
     map<string, bool> unused_dependencies;
-    for (auto input : gcc_command->inputs) {
+    for (auto input : gcc_command.second->inputs) {
       unused_dependencies.insert(pair(input, false));
     }
     // consumes unused_dependencies.
-    find_deps(unused_dependencies, gcc_compile_commands);
+    find_deps(unused_dependencies, gcc_compile_commands, gcc_link_commands,
+              ar_commands);
   }
 
   input_stream.close();

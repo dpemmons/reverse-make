@@ -1,0 +1,161 @@
+Skipping unrecognized command "rm" on line 37.
+Skipping unrecognized command "ln" on line 38.
+Skipping unrecognized command "ln" on line 39.
+----------------------------------------------------
+ar archive target: libz.a has 15 dependencies: adler32.o, crc32.o, deflate.o, infback.o, inffast.o, inflate.o, inftrees.o, trees.o, zutil.o, compress.o, uncompr.o, gzclose.o, gzlib.o, gzread.o, gzwrite.o.
+----------------------------------------------------
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 15 source dependencies: ["adler32.c", "compress.c", "crc32.c", "deflate.c", "gzclose.c", "gzlib.c", "gzread.c", "gzwrite.c", "infback.c", "inffast.c", "inflate.c", "inftrees.c", "trees.c", "uncompr.c", "zutil.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: example has 2 dependencies: example.o, libz.a
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/example.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: example64 has 2 dependencies: example64.o, libz.a
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/example.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_FILE_OFFSET_BITS=64", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: examplesh has 2 dependencies: example.o, libz.so.1.2.13
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/example.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: libz.so.1.2.13 has 15 dependencies: adler32.lo, crc32.lo, deflate.lo, infback.lo, inffast.lo, inflate.lo, inftrees.lo, trees.lo, zutil.lo, compress.lo, uncompr.lo, gzclose.lo, gzlib.lo, gzread.lo, gzwrite.lo
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {"-shared"}
+    link_search_dirs: {}
+    link_libs: {"-lc"}
+  Found the following group(s) of matching source dependencies:
+----------------------------------------------------
+gcc link target: minigzip has 2 dependencies: minigzip.o, libz.a
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/minigzip.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: minigzip64 has 2 dependencies: minigzip64.o, libz.a
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/minigzip.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_FILE_OFFSET_BITS=64", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}
+----------------------------------------------------
+gcc link target: minigzipsh has 2 dependencies: minigzip.o, libz.so.1.2.13
+----------------------------------------------------
+  Linked with the following flags:
+    linkopts: {}
+    link_search_dirs: {"-L."}
+    link_libs: {}
+  Found the following group(s) of matching source dependencies:
+    Group 0 depending on 1 source dependencies: ["test/minigzip.c"]
+    Compiled with the following flags:
+      compiler: gcc
+      command: COMPILE
+      defines: {"-DHAVE_HIDDEN", "-D_LARGEFILE64_SOURCE=1"}
+      includes: {"-I."}
+      cflags: {}
+      warns: {}
+      target_opts: {}
+      optimizations: {"-O3"}
+      debug: {}
+      linkopts: {}
+      link_search_dirs: {}
+      link_libs: {}

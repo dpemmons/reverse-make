@@ -53,9 +53,10 @@ Note: Your build log might need some cleanup before running.
 
 ## Examples
 
-| Input | Output |
+| Build Log | Generated Summary |
 |-------|--------|
-| [libuv.input.log](./examples/libuv.input.log) | [libuv.output.txt](./examples/libuv.output.txt) |
+| [zlib.build.log](./examples/zlib.build.log) | [zlib.summary.txt](./examples/zlib.summary.txt) |
+| [libuv.build.log](./examples/libuv.build.log) | [libuv.summary.txt](./examples/libuv.summary.txt) |
 
 ## Limitations
 
