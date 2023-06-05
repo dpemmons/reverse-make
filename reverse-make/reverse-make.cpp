@@ -576,7 +576,7 @@ int main(int argc, const char** argv) {
 
   ifstream input_stream(args.getInpuFilename());
   if (!input_stream.is_open()) {
-    fmt::print("Unable to open file: {}\n", args.getInpuFilename());
+    fmt::print(stderr, "Unable to open file: {}\n", args.getInpuFilename());
     return 1;
   }
 
@@ -599,14 +599,14 @@ int main(int argc, const char** argv) {
         } else if (c->command == GccCommand::LINK) {
           gcc_link_commands.insert(pair(c->output, c));
         } else {
-          fmt::print("Unsupported or unknown gcc/g++ command type.");
+          fmt::print(stderr, "Unsupported or unknown gcc/g++ command type.");
           abort();
         }
       } else if (parts[0] == "ar") {
         auto c = process_ar_command(parts);
         ar_commands.insert(pair(c->output, c));
       } else {
-        fmt::print("Skipping unrecognized command \"{}\" on line {}.\n",
+        fmt::print(stderr, "Skipping unrecognized command \"{}\" on line {}.\n",
                    parts[0], line);
       }
     }
@@ -658,6 +658,10 @@ int main(int argc, const char** argv) {
   }
 
   input_stream.close();
+
+  if (!gcc_link_commands.size() && !ar_commands.size()) {
+    fmt::print(stderr, "No link commands found.\n");
+  }
 
   return 0;
 }
