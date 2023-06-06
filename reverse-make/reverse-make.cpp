@@ -613,6 +613,21 @@ int main(int argc, const char** argv) {
     line++;
   }
 
+  if (!gcc_link_commands.size() && !ar_commands.size()) {
+    static const string generated_target = "reverse-make-generated-target.a";
+    fmt::print(stderr,
+               "NOTE: No link commands found. Creating ar target "
+               "\"{}\" with all found sources as dependencies.\n",
+               generated_target);
+    auto ar_command = make_shared<ArCommand>();
+    ar_command->output = generated_target;
+    for (auto& c : gcc_compile_commands) {
+      auto command = c.second;
+      ar_command->inputs.push_back(command->output);
+    }
+    ar_commands.insert(pair(ar_command->output, ar_command));
+  }
+
   // For each ar link target...
   for (auto ar_command : ar_commands) {
     fmt::print("----------------------------------------------------\n");
@@ -658,10 +673,6 @@ int main(int argc, const char** argv) {
   }
 
   input_stream.close();
-
-  if (!gcc_link_commands.size() && !ar_commands.size()) {
-    fmt::print(stderr, "No link commands found.\n");
-  }
 
   return 0;
 }
