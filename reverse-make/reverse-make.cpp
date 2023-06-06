@@ -615,8 +615,7 @@ int main(int argc, const char** argv) {
 
   if (!gcc_link_commands.size() && !ar_commands.size()) {
     static const string generated_target = "reverse-make-generated-target.a";
-    fmt::print(stderr,
-               "NOTE: No link commands found. Creating ar target "
+    fmt::print("NOTE: No link commands found. Creating ar target "
                "\"{}\" with all found sources as dependencies.\n",
                generated_target);
     auto ar_command = make_shared<ArCommand>();
