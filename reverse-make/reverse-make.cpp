@@ -427,9 +427,9 @@ shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   auto ar_command = make_shared<ArCommand>();
 
   if (parts.size() < 4 || (parts[1] != "cr" && parts[1] != "rc" &&
-                           parts[1] != "qc" && parts[1] != "cq")) {
+                           parts[1] != "qc" && parts[1] != "cq" && parts[1] != "rcs")) {
     fmt::print(
-        "Only form of `ar` command suported is `ar cr|rc|cq|qc <inputs...> "
+        "Only form of `ar` command suported is `ar cr|rc|cq|qc|rcs <inputs...> "
         "<output>\n");
     abort();
   }
