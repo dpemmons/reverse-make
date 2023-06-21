@@ -278,8 +278,9 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
     } else if (startsWith(parts[i], "-D")) {
       // defines
       gcc_command->defines.insert(parts[i]);
-    } else if (startsWith(parts[i], "-I")) {
-      // includes
+    } else if (startsWith(parts[i], "-I") || parts[i] == "-iquote" ||
+               parts[i] == "-isystem" || parts[i] == "-idirafter") {
+      // includes (does this actually work? we tend to recreate these anyway...)
       gcc_command->includes.insert(parts[i]);
     } else if (startsWith(parts[i], "-fuse")) {
       if (i + 1 == parts.size()) {
@@ -375,12 +376,11 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
                parts[i] == "-no-integrated-cpp" || parts[i] == "-Xassembler" ||
                parts[i] == "-T" || parts[i] == "-e" ||
                startsWith(parts[i], "--entry") || parts[i] == "-u" ||
-               parts[i] == "-z" || parts[i] == "-iquote" ||
-               parts[i] == "-isystem" || parts[i] == "-idirafter" ||
-               parts[i] == "-I-" || parts[i] == "-iprefix" ||
-               parts[i] == "-iwithprefix" || parts[i] == "-iwithprefixbefore" ||
-               parts[i] == "-isysroot" || parts[i] == "-imultilib" ||
-               parts[i] == "-nostdinc" || parts[i] == "-nostdinc++" ||
+               parts[i] == "-z" || parts[i] == "-I-" ||
+               parts[i] == "-iprefix" || parts[i] == "-iwithprefix" ||
+               parts[i] == "-iwithprefixbefore" || parts[i] == "-isysroot" ||
+               parts[i] == "-imultilib" || parts[i] == "-nostdinc" ||
+               parts[i] == "-nostdinc++" ||
                startsWith(parts[i], "-iplugindir") ||
                startsWith(parts[i], "-B") ||
                parts[i] == "-no-canonical-prefixes" ||
@@ -426,8 +426,9 @@ shared_ptr<GccCommand> process_gcc_command(const vector<string>& parts) {
 shared_ptr<ArCommand> process_ar_command(const vector<string>& parts) {
   auto ar_command = make_shared<ArCommand>();
 
-  if (parts.size() < 4 || (parts[1] != "cr" && parts[1] != "rc" &&
-                           parts[1] != "qc" && parts[1] != "cq" && parts[1] != "rcs")) {
+  if (parts.size() < 4 ||
+      (parts[1] != "cr" && parts[1] != "rc" && parts[1] != "qc" &&
+       parts[1] != "cq" && parts[1] != "rcs")) {
     fmt::print(
         "Only form of `ar` command suported is `ar cr|rc|cq|qc|rcs <inputs...> "
         "<output>\n");
@@ -615,9 +616,10 @@ int main(int argc, const char** argv) {
 
   if (!gcc_link_commands.size() && !ar_commands.size()) {
     static const string generated_target = "reverse-make-generated-target.a";
-    fmt::print("NOTE: No link commands found. Creating ar target "
-               "\"{}\" with all found sources as dependencies.\n",
-               generated_target);
+    fmt::print(
+        "NOTE: No link commands found. Creating ar target "
+        "\"{}\" with all found sources as dependencies.\n",
+        generated_target);
     auto ar_command = make_shared<ArCommand>();
     ar_command->output = generated_target;
     for (auto& c : gcc_compile_commands) {
